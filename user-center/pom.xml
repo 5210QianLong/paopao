@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.zhao</groupId>
-    <artifactId>user-center</artifactId>
+    <artifactId>Paopao</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>user-center</name>
     <description>user-center</description>
