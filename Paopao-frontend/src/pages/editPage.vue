@@ -3,8 +3,8 @@
     <van-cell-group inset>
       <van-field
           v-model="editUser.value"
-          :name="editUser.name"
-          :label="editUser.title"
+          :name="editUser.value.name"
+          :label="editUser.value.title"
           placeholder="用户名"
           :rules="[{ required: true, message: '请填写用户名' }]"
       />
