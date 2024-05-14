@@ -20,8 +20,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.zhao.usercenter.common.ErrorCode.NULL_ERROR;
-import static com.zhao.usercenter.common.ErrorCode.PARAMS_ERROR;
+import static com.zhao.usercenter.common.ErrorCode.*;
+import static com.zhao.usercenter.constant.UserConstant.ADMIN_ROLE;
 import static com.zhao.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 @Service
@@ -33,7 +33,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
      * @param userPassword 密码
      * @param checkPassword 校验密码
      * @return 用户id
-     * author long
+     * @author long
      */
     @Resource
     private UserMapper userMapper;
@@ -120,13 +120,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
             log.info("user login failed,userAccount cannot match userPassword");
             throw new BusinessException(NULL_ERROR,"不存在该用户");
         }
-        /**
-         * 用户脱敏
-         */
+        //用户脱敏
         User safetyUser = getSafetyUser(user1);
-        /**
-         * 设置登录态
-         */
+        //设置登录态
         request.getSession().setAttribute(USER_LOGIN_STATE,user1);
 
         return safetyUser;
@@ -171,9 +167,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         if (CollectionUtils.isEmpty(tagNameList)){
             throw new BusinessException(PARAMS_ERROR);
         }
-        /**
-         * 这个是利用sql查询
-         */
+        //这个是利用sql查询
 //        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 //        for (String tagName : tagNameList) {
 //            queryWrapper.like("tags",tagName);
@@ -209,4 +203,49 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         }).map(this::getSafetyUser).toList();
 
     }
+
+    @Override
+    public User getLoginUser(HttpServletRequest request) {
+        if (request == null){
+            throw new BusinessException(NULL_ERROR);
+        }
+        Object loginUser = request.getSession().getAttribute(USER_LOGIN_STATE);
+        if (loginUser == null){
+            throw new BusinessException(NULL_ERROR);
+        }
+        return (User)loginUser;
+    }
+    @Override
+    public Integer updateUserInfo(User user,User userLogin) {
+        //鉴权，是管理员或是用户本身
+        //判断 当前登录的用户 是不是 管理员
+        Long userId = user.getId();
+        if (userId <= 0){
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        if (!isAdmin(userLogin) && !userId.equals(userLogin.getId())){
+            throw new BusinessException(NOT_AUTH);
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null){
+            throw new BusinessException(NULL_ERROR);
+        }
+        return userMapper.updateById(user);
+    }
+
+
+    @Override
+    public boolean isAdmin(HttpServletRequest request){
+        //鉴权，非管理员无法调用
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return user != null && user.getUserRole() == ADMIN_ROLE;
+    }
+    @Override
+    public boolean isAdmin(User userLogin){
+        //鉴权，非管理员无法调用
+        //为空 和不是 管理员 都会返回 false
+        return userLogin != null && userLogin.getUserRole() == ADMIN_ROLE;
+    }
+
 }

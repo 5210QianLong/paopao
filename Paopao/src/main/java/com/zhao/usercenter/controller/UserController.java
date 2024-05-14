@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import static com.zhao.usercenter.common.ErrorCode.*;
-import static com.zhao.usercenter.constant.UserConstant.ADMIN_ROLE;
 import static com.zhao.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
@@ -90,7 +89,21 @@ public class UserController {
         return ResultUtils.success(safetyUser);
     }
 
-
+    /**
+     *
+     * @param user 前端来的数据
+     * @param request 获取当前用户登录态
+     * @return 是否成功
+     */
+    @PostMapping("/update")
+    public BaseResponse<Integer> userUpdate(User user,HttpServletRequest request) {
+        if (user == null) {
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Integer userInfo = userService.updateUserInfo(user,loginUser);
+        return ResultUtils.success(userInfo);
+    }
 
     /**
      * 用户查询接口
@@ -100,7 +113,7 @@ public class UserController {
 
     @GetMapping("/search")
     public BaseResponse<List<User>> userSearch(String username, HttpServletRequest request) {
-        if (!isAdmin(request)){
+        if (!userService.isAdmin(request)){
             throw new BusinessException(NOT_AUTH,"无权限");
         }
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -136,7 +149,7 @@ public class UserController {
 
     @PostMapping("/delete")
     public BaseResponse<Boolean> userDelete(@RequestBody long id,HttpServletRequest request) {
-        if (!isAdmin(request)){
+        if (!userService.isAdmin(request)){
             throw new BusinessException(NOT_AUTH,"无权限");
         }
         if (id <= 0) {
@@ -145,10 +158,5 @@ public class UserController {
         boolean b = userService.removeById(id);
         return ResultUtils.success(b);
     }
-    private boolean isAdmin(HttpServletRequest request){
-        //鉴权，非管理员无法调用
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && user.getUserRole() == ADMIN_ROLE;
-    }
+
 }

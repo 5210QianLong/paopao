@@ -8,9 +8,7 @@ spring:
     url: jdbc:mysql://localhost:3306/zhao
     username: root
     password: 123456
-  # session 失效时间
-  session:
-    timeout: 86400
+
   #  配置redis
   profiles:
     active: dev
@@ -19,11 +17,14 @@ spring:
       host: localhost
       port: 6379
       database: 0
+  # session 失效时间
+  session:
+    timeout: 86400
+    store-type: redis
 server:
   port: 8080
   servlet:
     context-path: /api
-
 # springdoc-openapi项目配置
 springdoc:
   swagger-ui:
