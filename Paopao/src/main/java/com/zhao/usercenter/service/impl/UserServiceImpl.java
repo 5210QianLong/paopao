@@ -55,7 +55,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
            throw new BusinessException(NULL_ERROR,"星球编号过长");
        }
         //账户不能包含特殊字符
-        String str = "^[a-zA-Z_][a-zA-Z0-9_-]{5,15}$";
+        String str = "^[a-zA-Z0-9]{5,15}$";
         Matcher matcher = Pattern.compile(str).matcher(userAccount);
         if (!matcher.find()){
             throw new BusinessException(NULL_ERROR,"账户不能包含特殊字符");
@@ -104,7 +104,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
             throw new BusinessException(NULL_ERROR,"密码长度过长");
         }
         //账户不能包含特殊字符
-        String str = "^[a-zA-Z_][a-zA-Z0-9_-]{5,15}$";
+        String str = "^[a-zA-Z0-9]{5,15}$";
         Matcher matcher = Pattern.compile(str).matcher(userAccount);
         if (!matcher.find()){
             throw new BusinessException(NULL_ERROR,"账户不能包含特殊字符");
