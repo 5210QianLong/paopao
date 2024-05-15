@@ -8,6 +8,15 @@ import { VantResolver } from '@vant/auto-import-resolver';
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // server:{
+  //   proxy:{
+  //     '/a':{
+  //       target:'http://localhost:8080',
+  //       changeOrigin: true, // 是否改变源地址
+  //       rewrite: (path) => path.replace(/^\/a/, '') // 重写路径
+  //     }
+  //   }
+  // },
   plugins: [
     vue(),
     AutoImport({
@@ -17,4 +26,6 @@ export default defineConfig({
       resolvers: [VantResolver()],
     }),
   ],
+
 });
+

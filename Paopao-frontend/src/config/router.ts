@@ -4,6 +4,7 @@ import user from "../pages/user.vue";
 import Search from "../pages/Search.vue";
 import editPage from "../pages/editPage.vue";
 import searchResultPage from "../pages/searchResultPage.vue";
+import userLogin from "../pages/userLogin.vue";
 //  定义一些路由
 const routes = [
     { path: '/', component: index },
@@ -12,6 +13,7 @@ const routes = [
     { path: '/search', component: Search },
     { path: '/user/edit', component: editPage },
     { path: '/search/searchResult', component: searchResultPage },
+    { path: '/login', component: userLogin },
 
 ]
 export default routes

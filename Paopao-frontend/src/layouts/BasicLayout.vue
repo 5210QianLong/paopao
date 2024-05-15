@@ -24,7 +24,7 @@
 </template>
 <script setup>
 import {useRouter} from "vue-router";
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 
 const topTitle = ref("推荐")
 const router = useRouter();
@@ -33,6 +33,10 @@ const onClickRight = () => {
   router.push('/search')
 };
 const onChange = (index) =>{topTitle.value=index};
+
+onMounted(()=>{
+  router.replace("/login")
+})
 </script>
 <style scoped>
 
