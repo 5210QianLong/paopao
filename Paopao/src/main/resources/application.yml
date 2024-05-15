@@ -25,6 +25,9 @@ server:
   port: 8080
   servlet:
     context-path: /api
+    session:
+      cookie:
+        domain: localhost
 # springdoc-openapi项目配置
 springdoc:
   swagger-ui:

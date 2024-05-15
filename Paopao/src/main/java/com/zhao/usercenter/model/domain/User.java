@@ -3,6 +3,7 @@ package com.zhao.usercenter.model.domain;
 import com.baomidou.mybatisplus.annotation.*;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.Date;
 import lombok.Data;
 
@@ -95,4 +96,16 @@ public class User implements Serializable {
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
+    public boolean allFieldsAreNull() throws IllegalAccessException {
+            for (Field field : this.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                if (!field.getName().equals("id") && !field.getName().equals("serialVersionUID")) {
+                    if (field.get(this) != null) {
+                        return false;
+                    }
+                }
+
+            }
+            return true;
+        }
 }

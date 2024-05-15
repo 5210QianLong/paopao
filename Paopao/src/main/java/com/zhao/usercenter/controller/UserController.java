@@ -32,7 +32,7 @@ import static com.zhao.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 @RequestMapping("/user")
 @ApiSupport(author = "zql")
 @Profile("dev")
-@CrossOrigin(origins = {"http://localhost:5173/"})
+@CrossOrigin(allowCredentials = "true", origins = {"http://localhost:5173/"})
 public class UserController {
     @Resource
     private UserService userService;
@@ -96,8 +96,11 @@ public class UserController {
      * @return 是否成功
      */
     @PostMapping("/update")
-    public BaseResponse<Integer> userUpdate(User user,HttpServletRequest request) {
+    public BaseResponse<Integer> userUpdate(@RequestBody User user,HttpServletRequest request) throws IllegalAccessException {
         if (user == null) {
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        if (user.allFieldsAreNull()) {
             throw new BusinessException(PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
