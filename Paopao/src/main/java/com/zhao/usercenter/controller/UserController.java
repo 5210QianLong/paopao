@@ -131,6 +131,18 @@ public class UserController {
     }
 
     /**
+     * 用户推荐页的接口
+     * @return 所有对象
+     */
+    @GetMapping("/recommend")
+    public BaseResponse<List<User>> recommendUsers() {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        List<User> userList = userService.list(queryWrapper);
+        //由于上述是直接调用baseMapper里的方法，没有经过safety user的处理
+        List<User> result = userList.stream().map(user -> userService.getSafetyUser(user)).toList();
+        return ResultUtils.success(result);
+    }
+    /**
      *
      * @param tagNameList 前端传来的标签列表
      * @return 满足要求的用户列表
