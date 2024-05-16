@@ -39,5 +39,7 @@ onMounted(()=>{
 })
 </script>
 <style scoped>
-
+#contend{
+  padding-bottom: 50px;
+}
 </style>

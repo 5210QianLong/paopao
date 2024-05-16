@@ -7,7 +7,7 @@
   >
     <template #tags>
       <van-tag plain type="primary" v-for="tag in user.tags" style="margin-right: 8px;margin-top: 8px">
-            {{tag}}
+        {{tag}}
       </van-tag>
     </template>
     <template #footer>
@@ -41,7 +41,7 @@ onMounted(async ()=>{
   })
       .then(function (response) {
         console.log("/search/tags succeed",response);
-        return response.data.date;
+        return response.date;
       })
       .catch(function (error) {
         console.log("/search/tags failed",error);
