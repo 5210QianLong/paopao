@@ -10,11 +10,14 @@ let userList = ref([])
 
 onMounted(async ()=>{
   const userListDate = await myAxios.get('/recommend', {
-    params: {},
+    params: {
+      pageSize:8,
+      pageNum:1
+    },
   })
       .then(function (response) {
         console.log("/recommend succeed",response);
-        return response.date;
+        return response.date.records;
       })
       .catch(function (error) {
         console.log("/recommend failed",error);
