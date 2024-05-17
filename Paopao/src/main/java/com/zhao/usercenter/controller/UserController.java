@@ -1,6 +1,7 @@
 package com.zhao.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.xiaoymin.knife4j.annotations.ApiSupport;
 import com.zhao.usercenter.common.BaseResponse;
 import com.zhao.usercenter.common.ResultUtils;
@@ -135,12 +136,13 @@ public class UserController {
      * @return 所有对象
      */
     @GetMapping("/recommend")
-    public BaseResponse<List<User>> recommendUsers() {
+    public BaseResponse<Page<User>> recommendUsers(long pageSize , long pageNum) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        List<User> userList = userService.list(queryWrapper);
+        Page<User> userList = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
         //由于上述是直接调用baseMapper里的方法，没有经过safety user的处理
-        List<User> result = userList.stream().map(user -> userService.getSafetyUser(user)).toList();
-        return ResultUtils.success(result);
+//        List<User> result = userList.stream().map(user -> userService.getSafetyUser(user)).toList();
+
+        return ResultUtils.success(userList);
     }
     /**
      *
