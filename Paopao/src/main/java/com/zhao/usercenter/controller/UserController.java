@@ -45,7 +45,8 @@ public class UserController {
     private UserService userService;
 
     @Resource
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String,Object> redisTemplate;
+
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody userRegisterRequset userRegisterRequset) {
         if (userRegisterRequset == null) {
