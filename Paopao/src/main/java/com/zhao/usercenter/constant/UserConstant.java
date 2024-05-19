@@ -17,4 +17,5 @@ public interface UserConstant {
      */
     int DEFAULT_ROLE = 0;
     int ADMIN_ROLE = 1;
+    public static final String PROJECT_NAME = "Paopao";
 }
