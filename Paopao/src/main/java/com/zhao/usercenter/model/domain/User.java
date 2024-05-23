@@ -78,7 +78,7 @@ public class User implements Serializable {
      * 逻辑删除
      */
     @TableLogic
-    private Integer idDetele;
+    private Integer idDelete;
 
     /**
      * 用户角色 0-普通 1 -管理

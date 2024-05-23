@@ -36,5 +36,4 @@ public class SampleTest {
         Assert.assertEquals(4,userList.size());//断言，我觉得
         userList.forEach(System.out::println);
     }
-
 }
