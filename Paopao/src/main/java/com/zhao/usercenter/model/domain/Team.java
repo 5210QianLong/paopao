@@ -2,7 +2,6 @@ package com.zhao.usercenter.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -10,13 +9,13 @@ import java.util.Date;
  * 队伍
  * @TableName team
  */
+
 @TableName(value ="team")
 @Data
 public class Team implements Serializable {
     /**
      * 队伍id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
