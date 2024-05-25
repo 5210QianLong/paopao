@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="generator.mapper.UserTeamMapper">
+<mapper namespace="com.zhao.usercenter.mapper.UserTeamMapper">
 
-    <resultMap id="BaseResultMap" type="generator.domain.UserTeam">
+    <resultMap id="BaseResultMap" type="com.zhao.usercenter.model.domain.UserTeam">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="teamId" column="team_id" jdbcType="BIGINT"/>
