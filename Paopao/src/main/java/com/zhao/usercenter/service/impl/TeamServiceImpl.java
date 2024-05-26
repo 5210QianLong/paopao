@@ -8,17 +8,23 @@ import com.zhao.usercenter.model.domain.Team;
 import com.zhao.usercenter.mapper.TeamMapper;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.domain.UserTeam;
+import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.enums.TeamStatusEnums;
+import com.zhao.usercenter.model.requset.TeamUpdateRequest;
+import com.zhao.usercenter.model.vo.TeamUserVO;
+import com.zhao.usercenter.model.vo.UserVO;
 import com.zhao.usercenter.service.TeamService;
+import com.zhao.usercenter.service.UserService;
 import com.zhao.usercenter.service.UserTeamService;
 import jakarta.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.lang.reflect.Field;
+import java.util.*;
 
 /**
 * @author zql
@@ -30,6 +36,8 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     implements TeamService{
     @Resource
     private UserTeamService userTeamService;
+    @Resource
+    private  UserService userService;
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long addTeam(Team team, User loginUser) {
@@ -92,6 +100,112 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"创建队伍失败");
         }
         return teamId;
+    }
+
+    @Override
+    public List<TeamUserVO> getUserList(TeamQuery teamQuery,Boolean isAdmin) {
+        //根据列表条件查询
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        Long id = teamQuery.getId();
+        if (id != null && id > 0){
+            queryWrapper.eq("id",id);
+        }
+        //根据搜索文本区查队伍
+        String searchText = teamQuery.getSearchText();
+        if (StringUtils.isNotBlank(searchText)){
+            queryWrapper.and(qw->qw.like("team_name",searchText).or().like("description",searchText));
+        }
+        String teamName1 = teamQuery.getTeamName();
+        if (StringUtils.isNotBlank(teamName1)){
+            queryWrapper.like("team_name", teamName1);
+        }
+        String description1 = teamQuery.getDescription();
+        if (StringUtils.isNotBlank(description1)){
+            queryWrapper.like("description", description1);
+        }
+        Integer maxNum1 = teamQuery.getMaxNum();
+        if (maxNum1 != null && maxNum1 > 0){
+            queryWrapper.eq("max_num", maxNum1);
+        }
+        Integer status1 = teamQuery.getStatus();
+        //只有管理员才能查看所有队伍
+        TeamStatusEnums enumsByValue = TeamStatusEnums.getEnumsByValue(status1);
+        if (enumsByValue == null){
+            enumsByValue = TeamStatusEnums.PUBLIC;
+        }
+        if(Boolean.TRUE.equals(!isAdmin) && !TeamStatusEnums.PUBLIC.equals(enumsByValue)){
+            throw new BusinessException(ErrorCode.NOT_AUTH);
+        }
+        queryWrapper.eq("status", enumsByValue.getValue());
+        //过期队伍不展示
+        //ge() 使用ge()方法筛选出列值大于等于给定值的数据
+        // queryWrapper.ge("expire_time", expireTime1);
+        // lt()它用于筛选出小于指定值的结果。
+        //选择那些expire_time字段的值小于当前日期或expire_time字段的值为NULL的记录。
+        queryWrapper.and(qw->qw.gt("expire_time",new Date()).or().isNull("expire_time"));
+        Long userId1 = teamQuery.getUserId();
+        if(userId1 != null && userId1 > 0){
+            queryWrapper.eq("user_id", userId1);
+        }
+        List<Team> teamList = this.list(queryWrapper);
+        if (CollectionUtils.isEmpty(teamList)){
+            return new ArrayList<>();
+        }
+        return getUserList(teamList,userService);
+    }
+    public static List<TeamUserVO> getUserList(List<Team> teamList,UserService userService) {
+        //关联查询队伍创建人的信息
+        List<TeamUserVO> teamUserVOList = new ArrayList<>();
+        for (Team team : teamList){
+            Long createTeamUserId = team.getUserId();
+            if (createTeamUserId == null){
+                continue;
+            }
+            User user = userService.getById(createTeamUserId);
+            TeamUserVO teamUserVO = new TeamUserVO();
+            BeanUtils.copyProperties(team,teamUserVO);//这样teamUserVO里面就有数据了
+            //用户脱敏
+            User safetyUser = userService.getSafetyUser(user);
+            if (safetyUser != null){
+                UserVO userVO = new UserVO();
+                BeanUtils.copyProperties(safetyUser,userVO);
+                teamUserVO.setCreateUser(userVO);
+            }
+            teamUserVOList.add(teamUserVO);
+        }
+        //关联查询队伍创建人的信息
+        return teamUserVOList;
+    }
+    @Override
+    public boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser) {
+        if (teamUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long id = teamUpdateRequest.getId();
+        if (id != null && id < 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team oldTeam = this.getById(id);
+        if (oldTeam == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if (!Objects.equals(loginUser.getId(),oldTeam.getUserId()) && userService.isAdmin(loginUser)){
+            throw new BusinessException(ErrorCode.NOT_AUTH);
+        }
+        //如果用户传入的数据和旧值一样，直接返回
+        //这里注意过期时间，
+        if (teamUpdateRequest.getId().equals(oldTeam.getId())
+                && teamUpdateRequest.getTeamName().equals(oldTeam.getTeamName())
+                && teamUpdateRequest.getDescription().equals(oldTeam.getDescription())
+                && teamUpdateRequest.getStatus().equals(oldTeam.getStatus())
+                && teamUpdateRequest.getExpireTime().equals(oldTeam.getExpireTime())
+                && teamUpdateRequest.getUserId().equals(oldTeam.getUserId())
+        ){
+            return true;
+        }
+        Team team = new Team();
+        BeanUtils.copyProperties(teamUpdateRequest,team);
+        return this.updateById(team);
     }
 }
 

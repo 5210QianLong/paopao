@@ -1,28 +1,28 @@
-package com.zhao.usercenter.model.dto;
+package com.zhao.usercenter.model.requset;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.zhao.usercenter.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
-@EqualsAndHashCode(callSuper = true)
+/**
+ * 用户注册请求体
+ *
+ * @author zql
+ */
 @Data
-public class TeamQuery extends PageRequest {
+public class TeamUpdateRequest implements Serializable {
+
+
     @Serial
-    private static final long serialVersionUID = 5286853734447044133L;
+    private static final long serialVersionUID = 4173122236992416464L;
     /**
      * 队伍id
      */
     private Long id;
-    /**
-     * 搜索文本
-     */
-    private String searchText;
     /**
      * 队伍名称
      */
@@ -32,16 +32,9 @@ public class TeamQuery extends PageRequest {
      * 队伍描述
      */
     private String description;
-
-    /**
-     * 最大人数
-     */
-    private Integer maxNum;
-
     /**
      * 过期时间
      */
-
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date expireTime;
 
@@ -54,5 +47,4 @@ public class TeamQuery extends PageRequest {
      * 0-公开 1-私有 2-加密
      */
     private Integer status;
-
 }

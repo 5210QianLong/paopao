@@ -11,6 +11,8 @@ import com.zhao.usercenter.model.domain.Team;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.requset.TeamAddRequest;
+import com.zhao.usercenter.model.requset.TeamUpdateRequest;
+import com.zhao.usercenter.model.vo.TeamUserVO;
 import com.zhao.usercenter.service.TeamService;
 import com.zhao.usercenter.service.UserService;
 import jakarta.annotation.Resource;
@@ -68,15 +70,13 @@ public class TeamController {
         return ResultUtils.success(true);
     }
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Boolean> updateTeam(@RequestBody TeamUpdateRequest teamUpdateRequest,HttpServletRequest request) {
+        if (teamUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean result = teamService.updateById(team);
-        if (!result){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"更新失败");
-        }
-        return ResultUtils.success(true);
+        User loginUser = userService.getLoginUser(request);
+        boolean result = teamService.updateTeam(teamUpdateRequest,loginUser);
+        return ResultUtils.success(result);
     }
     @GetMapping("/get")
     public BaseResponse<Team> getTeamById(@RequestParam("id") long id) {
@@ -90,14 +90,12 @@ public class TeamController {
         return ResultUtils.success(team);
     }
     @GetMapping("/list")
-    public BaseResponse<List<Team>> getTeamLists(TeamQuery teamQuery) {
+    public BaseResponse<List<TeamUserVO>> getTeamLists(TeamQuery teamQuery, HttpServletRequest request) {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Team team = new Team();
-        BeanUtils.copyProperties(teamQuery, team);
-        QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        List<Team> teamList = teamService.list(queryWrapper);
+        boolean isAdmin = userService.isAdmin(request);
+        List<TeamUserVO> teamList = teamService.getUserList(teamQuery,isAdmin);
         if (teamList == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }

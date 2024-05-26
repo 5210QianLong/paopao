@@ -1,9 +1,11 @@
 package com.zhao.usercenter.model.domain;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * 队伍
@@ -36,6 +38,8 @@ public class Team implements Serializable {
     /**
      * 过期时间
      */
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private Date expireTime;
 
     /**
