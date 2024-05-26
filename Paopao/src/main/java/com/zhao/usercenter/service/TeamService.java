@@ -2,6 +2,7 @@ package com.zhao.usercenter.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhao.usercenter.model.domain.Team;
+import com.zhao.usercenter.model.domain.User;
 
 /**
 * @author zql
@@ -9,5 +10,11 @@ import com.zhao.usercenter.model.domain.Team;
 * @createDate 2024-05-21 11:13:45
 */
 public interface TeamService extends IService<Team> {
-
+    /**
+     *  添加队伍
+     * @param team
+     * @param loginUser
+     * @return
+     */
+    long addTeam(Team team, User loginUser);
 }

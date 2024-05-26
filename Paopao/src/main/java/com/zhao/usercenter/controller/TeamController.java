@@ -8,15 +8,20 @@ import com.zhao.usercenter.common.ErrorCode;
 import com.zhao.usercenter.common.ResultUtils;
 import com.zhao.usercenter.exception.BusinessException;
 import com.zhao.usercenter.model.domain.Team;
+import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.dto.TeamQuery;
+import com.zhao.usercenter.model.requset.TeamAddRequest;
 import com.zhao.usercenter.service.TeamService;
+import com.zhao.usercenter.service.UserService;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+
+
 
 
 /**
@@ -37,16 +42,19 @@ public class TeamController {
 
     @Resource
     private TeamService teamService;
+    @Resource
+    private UserService userService;
     @PostMapping("/add")
-    public BaseResponse<Long> addTeam(@RequestBody Team team) {
-        if (team == null) {
+    public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
+        //请求参数是否为空
+        if (teamAddRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean save = teamService.save(team);
-        if (!save){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"插入失败");
-        }
-        return ResultUtils.success(team.getId());
+        User loginUser = userService.getLoginUser(request);
+        Team team = new Team();
+        BeanUtils.copyProperties(teamAddRequest, team);
+        long teamId = teamService.addTeam(team, loginUser);
+        return ResultUtils.success(teamId);
     }
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteTeam(@RequestParam long id) {

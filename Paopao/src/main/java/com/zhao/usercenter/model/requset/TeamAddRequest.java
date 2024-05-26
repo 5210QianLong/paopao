@@ -1,25 +1,21 @@
-package com.zhao.usercenter.model.dto;
+package com.zhao.usercenter.model.requset;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.zhao.usercenter.common.PageRequest;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.io.Serializable;
 import java.util.Date;
 
-@EqualsAndHashCode(callSuper = true)
+/**
+ * 用户注册请求体
+ *
+ * @author zql
+ */
 @Data
-public class TeamQuery extends PageRequest {
-    @Serial
-    private static final long serialVersionUID = 5286853734447044133L;
-    /**
-     * 队伍id
-     */
-    @TableId(type = IdType.AUTO)
-    private Long id;
+public class TeamAddRequest implements Serializable {
 
+    @Serial
+    private static final long serialVersionUID = 250770966443951684L;
     /**
      * 队伍名称
      */
@@ -50,4 +46,8 @@ public class TeamQuery extends PageRequest {
      */
     private Integer status;
 
+    /**
+     * 队伍密码
+     */
+    private String password;
 }
