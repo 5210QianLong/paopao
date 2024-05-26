@@ -17,7 +17,6 @@ public class TeamQuery extends PageRequest {
     /**
      * 队伍id
      */
-    @TableId(type = IdType.AUTO)
     private Long id;
 
     /**
