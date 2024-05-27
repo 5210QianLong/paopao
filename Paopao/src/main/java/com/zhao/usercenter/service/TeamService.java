@@ -4,8 +4,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhao.usercenter.model.domain.Team;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.dto.TeamQuery;
+import com.zhao.usercenter.model.requset.TeamJoinRequest;
 import com.zhao.usercenter.model.requset.TeamUpdateRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -38,4 +40,11 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser);
+
+    /**
+     * 用户加入队伍
+     * @param teamJoinRequest
+     * @return
+     */
+    Boolean userJoinTeam(TeamJoinRequest teamJoinRequest, HttpServletRequest request);
 }

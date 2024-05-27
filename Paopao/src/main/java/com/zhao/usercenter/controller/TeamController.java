@@ -11,6 +11,7 @@ import com.zhao.usercenter.model.domain.Team;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.requset.TeamAddRequest;
+import com.zhao.usercenter.model.requset.TeamJoinRequest;
 import com.zhao.usercenter.model.requset.TeamUpdateRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
 import com.zhao.usercenter.service.TeamService;
@@ -18,8 +19,10 @@ import com.zhao.usercenter.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.annotation.Profile;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -115,5 +118,13 @@ public class TeamController {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         return ResultUtils.success(teamList);
+    }
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest,HttpServletRequest request){
+        if (teamJoinRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Boolean result = teamService.userJoinTeam(teamJoinRequest,request);
+        return ResultUtils.success(result);
     }
 }

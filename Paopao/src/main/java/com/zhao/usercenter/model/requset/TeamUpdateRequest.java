@@ -47,4 +47,8 @@ public class TeamUpdateRequest implements Serializable {
      * 0-公开 1-私有 2-加密
      */
     private Integer status;
+    /**
+     * 队伍密码
+     */
+    private String password;
 }

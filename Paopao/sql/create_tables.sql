@@ -55,7 +55,7 @@ create table team
     expire_time   datetime                            null comment '过期时间',
     user_id       bigint                                   comment '用户id',
     status   int       default 0                      null comment '0-公开 1-私有 2-加密',
-    password varchar(512)                        not null comment '队伍密码',
+    password varchar(512)                         comment '队伍密码',
     create_time   timestamp default CURRENT_TIMESTAMP null comment '创建时间',
     update_time   datetime  default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间',
     id_delete     tinyint   default 0                 not null comment '逻辑删除'

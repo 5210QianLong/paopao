@@ -211,7 +211,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         }
         Object loginUser = request.getSession().getAttribute(USER_LOGIN_STATE);
         if (loginUser == null){
-            throw new BusinessException(NULL_ERROR);
+            throw new BusinessException(NOT_LOGIN);
         }
         return (User)loginUser;
     }
