@@ -27,6 +27,9 @@ import static com.zhao.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements UserService {
+    @Resource
+    private UserMapper userMapper;
+    public static final String SALT = "zhaoqian";
     /**
      * 用户实现类
      * @param userAccount 账户
@@ -35,10 +38,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
      * @return 用户id
      * @author long
      */
-    @Resource
-    private UserMapper userMapper;
-    public static final String SALT = "zhaoqian";
-
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword,String planetCode) {
         //校验
@@ -174,9 +173,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
 //        }
 //        List<User> users = userMapper.selectList(queryWrapper);
 //        return users.stream().map(this::getSafetyUser).toList();
-        /**
-         * 内存chaxun
-         */
+         //内存查询
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         List<User> users = userMapper.selectList(queryWrapper);
         Gson gson = new Gson();
