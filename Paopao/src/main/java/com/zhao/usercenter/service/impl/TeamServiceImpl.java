@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhao.usercenter.common.ErrorCode;
 import com.zhao.usercenter.exception.BusinessException;
+import com.zhao.usercenter.mapper.UserTeamMapper;
 import com.zhao.usercenter.model.domain.Team;
 import com.zhao.usercenter.mapper.TeamMapper;
 import com.zhao.usercenter.model.domain.User;
@@ -12,6 +13,7 @@ import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.enums.TeamStatusEnums;
 import com.zhao.usercenter.model.requset.TeamJoinRequest;
 import com.zhao.usercenter.model.requset.TeamUpdateRequest;
+import com.zhao.usercenter.model.requset.TeamquitRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
 import com.zhao.usercenter.model.vo.UserVO;
 import com.zhao.usercenter.service.TeamService;
@@ -19,8 +21,10 @@ import com.zhao.usercenter.service.UserService;
 import com.zhao.usercenter.service.UserTeamService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -33,6 +37,7 @@ import java.util.*;
 * @description 针对表【team(队伍)】的数据库操作Service实现
 * @createDate 2024-05-21 11:13:45
 */
+@Slf4j
 @Service
 public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     implements TeamService{
@@ -40,6 +45,9 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     private UserTeamService userTeamService;
     @Resource
     private  UserService userService;
+    @Autowired
+    private UserTeamMapper userTeamMapper;
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long addTeam(Team team, User loginUser) {
@@ -281,6 +289,67 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         newUserTeam.setUserId(loginUser.getId());
         newUserTeam.setJoinTime(new Date());
         return userTeamService.save(newUserTeam);
+    }
+
+    @Override
+    public Boolean userQuitTeam(TeamquitRequest teamquitRequest, User loginUser) {
+        if (teamquitRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Long userId = loginUser.getId();
+        Long teamId = teamquitRequest.getTeamId();
+        if (teamId == null || teamId < 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = this.getById(teamId);
+        if (team == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //当前用户是否在队伍里
+        UserTeam queryUserTeam = new UserTeam();
+        queryUserTeam.setTeamId(teamId);
+        queryUserTeam.setUserId(userId);
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>(queryUserTeam);
+        long count1 = userTeamService.count(queryWrapper);
+        if (count1 == 0){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        //查询该队伍里有多少用户
+        queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("team_id", teamId);
+        long count = userTeamService.count(queryWrapper);
+        if (count <=0 || count >5){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        //队伍只剩一个人
+        if (count == 1){
+            log.info("队伍只剩一个人退出队伍");
+            this.removeById(teamId);
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("team_id", teamId);
+           return userTeamService.remove(queryWrapper);
+        }
+        //是否是创建人
+        if(!Objects.equals(team.getLeaderId(), userId)){
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", userId);
+            log.info("非创建人退出队伍");
+            return userTeamService.remove(queryWrapper);
+        }else {
+            //是创建人
+            log.info("创建人退出队伍");
+            queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("user_id", team.getLeaderId());
+            queryWrapper.eq("team_id", teamId);
+            UserTeam leaderTeam = userTeamService.getOne(queryWrapper);
+            //根据查到的队长找到顺位继承人
+            UserTeam userTeam = userTeamMapper.selectByUserId(leaderTeam.getJoinTime());
+            team.setLeaderId(userTeam.getUserId());
+            //删除旧的队长-用户关系
+            userTeamService.remove(queryWrapper);
+            //更新队伍表队长
+            return this.updateById(team);
+        }
     }
 }
 

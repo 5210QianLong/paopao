@@ -11,6 +11,7 @@
             <result property="maxNum" column="max_num" jdbcType="INTEGER"/>
             <result property="expireTime" column="expire_time" jdbcType="TIMESTAMP"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
+            <result property="leaderId" column="leader_id" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
             <result property="password" column="password" jdbcType="VARCHAR"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
@@ -21,7 +22,7 @@
     <sql id="Base_Column_List">
         id,team_name,description,
         max_num,expire_time,user_id,
-        status,password,create_time,
-        update_time,id_delete
+        leader_id,status,password,
+        create_time,update_time,id_delete
     </sql>
 </mapper>

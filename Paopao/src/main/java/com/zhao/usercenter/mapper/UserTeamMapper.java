@@ -2,6 +2,9 @@ package com.zhao.usercenter.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.zhao.usercenter.model.domain.UserTeam;
+import org.apache.ibatis.annotations.Select;
+
+import java.util.Date;
 
 /**
 * @author zql
@@ -11,6 +14,8 @@ import com.zhao.usercenter.model.domain.UserTeam;
 */
 public interface UserTeamMapper extends BaseMapper<UserTeam> {
 
+    @Select("select * from user_team where join_time > #{leaderDate} limit 1")
+    UserTeam selectByUserId(Date leaderDate);
 }
 
 

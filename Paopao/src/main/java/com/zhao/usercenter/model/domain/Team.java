@@ -46,6 +46,10 @@ public class Team implements Serializable {
      * 用户id
      */
     private Long userId;
+    /**
+     * 队长id
+     */
+    private Long leaderId;
 
     /**
      * 0-公开 1-私有 2-加密

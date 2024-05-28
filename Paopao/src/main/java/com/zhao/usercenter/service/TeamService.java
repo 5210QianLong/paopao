@@ -6,6 +6,7 @@ import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.requset.TeamJoinRequest;
 import com.zhao.usercenter.model.requset.TeamUpdateRequest;
+import com.zhao.usercenter.model.requset.TeamquitRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -47,4 +48,12 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     Boolean userJoinTeam(TeamJoinRequest teamJoinRequest, HttpServletRequest request);
+
+    /**
+     * 用户退出队伍
+     * @param teamquitRequest
+     * @param loginUser
+     * @return
+     */
+    Boolean userQuitTeam(TeamquitRequest teamquitRequest, User loginUser);
 }

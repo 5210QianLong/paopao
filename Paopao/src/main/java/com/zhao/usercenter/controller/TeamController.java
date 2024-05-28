@@ -13,6 +13,7 @@ import com.zhao.usercenter.model.dto.TeamQuery;
 import com.zhao.usercenter.model.requset.TeamAddRequest;
 import com.zhao.usercenter.model.requset.TeamJoinRequest;
 import com.zhao.usercenter.model.requset.TeamUpdateRequest;
+import com.zhao.usercenter.model.requset.TeamquitRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
 import com.zhao.usercenter.service.TeamService;
 import com.zhao.usercenter.service.UserService;
@@ -125,6 +126,15 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Boolean result = teamService.userJoinTeam(teamJoinRequest,request);
+        return ResultUtils.success(result);
+    }
+    @PostMapping("/quit")
+    public BaseResponse<Boolean> quitTeam(@RequestBody TeamquitRequest teamquitRequest, HttpServletRequest request){
+        if (teamquitRequest==null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Boolean result = teamService.userQuitTeam(teamquitRequest,loginUser);
         return ResultUtils.success(result);
     }
 }
