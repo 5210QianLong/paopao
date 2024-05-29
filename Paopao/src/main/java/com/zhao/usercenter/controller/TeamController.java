@@ -137,4 +137,17 @@ public class TeamController {
         Boolean result = teamService.userQuitTeam(teamquitRequest,loginUser);
         return ResultUtils.success(result);
     }
+    /**
+     * 队长解散队伍
+     */
+    @PostMapping("/dismissing")
+    public BaseResponse<Boolean> dismissTeam(@RequestBody TeamquitRequest teamquitRequest, HttpServletRequest request){
+        if (teamquitRequest==null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        Boolean result =  teamService.dismissingTeam(teamquitRequest,loginUser);
+        return ResultUtils.success(result);
+    }
 }
+

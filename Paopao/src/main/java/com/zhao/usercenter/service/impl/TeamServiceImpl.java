@@ -2,6 +2,7 @@ package com.zhao.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.zhao.usercenter.common.BaseResponse;
 import com.zhao.usercenter.common.ErrorCode;
 import com.zhao.usercenter.exception.BusinessException;
 import com.zhao.usercenter.mapper.UserTeamMapper;
@@ -28,9 +29,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-
-import java.lang.reflect.Field;
 import java.util.*;
+
+import static com.zhao.usercenter.common.ErrorCode.NULL_ERROR;
+import static com.zhao.usercenter.common.ErrorCode.PARAMS_ERROR;
+import static com.zhao.usercenter.constant.UserConstant.ADMIN_ROLE;
 
 /**
 * @author zql
@@ -58,7 +61,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         Long userId = loginUser.getId();
         //校验队伍人数
         int maxNum = Optional.ofNullable(team.getMaxNum()).orElse(0);
-        if (maxNum<1 || maxNum>20) {
+        if (maxNum<1 || maxNum>10) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"队伍人数不满足要求");
         }
         //队伍标题
@@ -95,6 +98,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         //插入信息到队伍表
         team.setId(null);
         team.setUserId(userId);
+        team.setLeaderId(userId);
         boolean teamSaved = this.save(team);
         Long teamId = team.getId();
         if (!teamSaved){
@@ -292,19 +296,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean userQuitTeam(TeamquitRequest teamquitRequest, User loginUser) {
         if (teamquitRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Long userId = loginUser.getId();
+        Team team = getTeamById(teamquitRequest);
         Long teamId = teamquitRequest.getTeamId();
-        if (teamId == null || teamId < 0){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        Team team = this.getById(teamId);
-        if (team == null){
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
         //当前用户是否在队伍里
         UserTeam queryUserTeam = new UserTeam();
         queryUserTeam.setTeamId(teamId);
@@ -350,6 +349,38 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             //更新队伍表队长
             return this.updateById(team);
         }
+    }
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean dismissingTeam(TeamquitRequest teamquitRequest, User loginUser) {
+        if(teamquitRequest == null){
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        Team team = getTeamById(teamquitRequest);
+        //校验当前用户是不是队长 或 管理员
+        if(!loginUser.getId().equals(team.getLeaderId()) && !loginUser.getUserRole().equals(ADMIN_ROLE)){
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        //移除所有与该队伍相关的  队伍-用户关系
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        userTeamQueryWrapper.eq("team_id", team.getId());
+        boolean removeTeamUser = userTeamService.remove(userTeamQueryWrapper);
+        if (!removeTeamUser){
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR,"删除队伍-用户关系失败");
+        }
+        return this.removeById(team.getId());
+    }
+
+    private Team getTeamById(TeamquitRequest teamquitRequest) {
+        Long teamId = teamquitRequest.getTeamId();
+        if (teamId == null || teamId <= 0){
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        Team team = this.getById(teamId);
+        if (team == null){
+            throw new BusinessException(NULL_ERROR);
+        }
+        return team;
     }
 }
 

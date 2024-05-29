@@ -54,7 +54,7 @@ create table team
     team_name   varchar(256)                        null comment '队伍名称',
     description varchar(1024)                       null comment '队伍描述',
     max_num     int       default 1                 not null comment '最大人数',
-    expire_time datetime                            null comment '过期时间',
+    expire_time datetime                            not null comment '过期时间',
     user_id     bigint                              null comment '用户id',
     leader_id   bigint                              null comment '队长',
     status      int       default 0                 null comment '0-公开 1-私有 2-加密',
