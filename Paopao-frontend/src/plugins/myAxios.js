@@ -1,7 +1,7 @@
 import axios from "axios";
 // 创建实例时配置默认值
 const myAxios = axios.create({
-    baseURL: 'http://localhost:8080/api/user'
+    baseURL: 'http://localhost:8080/api'
 });
 myAxios.defaults.withCredentials=true //携带cookie
 // 添加请求拦截器

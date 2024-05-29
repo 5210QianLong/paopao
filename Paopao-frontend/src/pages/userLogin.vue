@@ -35,7 +35,7 @@ import {useRouter} from "vue-router";
   const userAccount = ref('');
   const userPassword = ref('');
   const onSubmit =async () => {
-  const res = await myAxios.post("/login",{
+  const res = await myAxios.post("/user/login",{
     userAccount: userAccount.value ,
     userPassword: userPassword.value
   })

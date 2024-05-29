@@ -28,8 +28,7 @@ interface UserCordListProps{
 const props =withDefaults(defineProps<UserCordListProps>(),{
   //若不加ts类型限定  defineProps(['user-list'])直接接收数据即可
   //@ts-ignore
-  userList: [] as UserType[],
-});
+  userList: ()=> [] as UserType[]});
 </script>
 
 

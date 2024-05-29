@@ -55,7 +55,7 @@ const onSubmit = async () => {
   }
   //todo 将数据提交到后台
   //思路：通过登录获得登录态session，拿到id,知道是哪个人,然后更新某一字段
-  const response = await myAxios.post("/update",{
+  const response = await myAxios.post("/user/update",{
     'id':currentUserId.value,
     [editUser.value.name]: editUser.value.value
   })

@@ -9,7 +9,7 @@ import UserCordList from "./userCordList.vue";
 let userList = ref([])
 
 onMounted(async ()=>{
-  const userListDate = await myAxios.get('/recommend', {
+  const userListDate = await myAxios.get('/user/recommend', {
     params: {
       pageSize:8,
       pageNum:1

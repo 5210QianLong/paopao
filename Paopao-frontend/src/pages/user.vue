@@ -46,7 +46,7 @@ const user = ref('')
 
 // 方法
 onMounted(async ()=>{
-  const res = await myAxios.get("/current")
+  const res = await myAxios.get("/user/current")
   if (res.code === 0 ){
     res.date.gender = res.date.gender === 0?"男":"女"
     res.date.tags = JSON.parse(res.date.tags)

@@ -1,20 +1,5 @@
 <template>
-  <van-card
-      v-for="user in userList" :key="user.id"
-      :desc="user.profile"
-      :title="`${user.username}(${user.planetCode})`"
-      :thumb="user.avatarUrl"
-  >
-    <template #tags>
-      <van-tag plain type="primary" v-for="tag in user.tags" style="margin-right: 8px;margin-top: 8px">
-        {{tag}}
-      </van-tag>
-    </template>
-    <template #footer>
-      <van-button size="mini">私信</van-button>
-      <van-button size="mini">关注</van-button>
-    </template>
-  </van-card>
+  <user-cord-list :user-list="userList"/>
   <!-- 搜索提示 -->
   <van-empty v-if="!userList || userList.length < 1" image="search" description="搜索结果为空" />
 </template>
@@ -23,12 +8,13 @@ import {useRoute} from "vue-router";
 import { ref,onMounted} from 'vue'
 import myAxios from "../plugins/myAxios.js";
 import qs from 'qs'
+import UserCordList from "./userCordList.vue";
 const route = useRoute()
 const { tagsList } = route.query
 let userList = ref([])
 
 onMounted(async ()=>{
-  const userListDate = await myAxios.get('/search/tags', {
+  const userListDate = await myAxios.get('/user/search/tags', {
     params: {
       tagNameList: tagsList
     },
