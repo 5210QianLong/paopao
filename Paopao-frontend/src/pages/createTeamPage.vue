@@ -67,21 +67,24 @@
   </van-form>
 </template>
 <script setup>
-  import {ref,watch} from "vue";
+  import {ref} from "vue";
   import myAxios from "../plugins/myAxios.js";
-
+  import {showFailToast, showSuccessToast} from "vant";
+  import {useRouter} from "vue-router";
+  const router = useRouter()
+  let minDate =new Date()
   const teamTable ={
       teamName: "",
       description: "",
       maxNum: 1,
-      expireTime: null,
+      expireTime: minDate,
       status: 0,
       password: ""
   }
   //加了... 不会修改原值
   let pageTeamTable = ref({...teamTable})
   const showPicker = ref(false);
-  let minDate =new Date()
+
   //方法
   const onSubmit = async()=>{
     const postDate ={
@@ -91,7 +94,15 @@
     //todo 日期不能为空
 
     const res = await myAxios.post("/team/add",postDate)
-
+    if (res.code===0 && res.data){
+      await showSuccessToast("添加成功")
+      router.push({
+        path:"/team",
+        replace:true
+      })
+    }else {
+      showFailToast("添加失败")
+    }
   }
   const onConfirm = ({ selectedValues }) => {
     pageTeamTable.value.expireTime = selectedValues.join('-');

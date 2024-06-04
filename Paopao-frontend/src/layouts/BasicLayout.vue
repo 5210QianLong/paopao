@@ -33,7 +33,6 @@ const onClickRight = () => {
   router.push('/search')
 };
 const onChange = (index) =>{topTitle.value=index};
-
 onMounted(()=>{
   router.replace("/login")
 })

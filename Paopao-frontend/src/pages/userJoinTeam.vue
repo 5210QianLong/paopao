@@ -4,11 +4,7 @@
       success-text="刷新成功"
       @refresh="onRefresh"
   >
-    <van-tabs v-model:active="active" swipeable>
-      <van-tab  title="推荐队伍" name="1" >
-        <team-cord-list :team-list="recommendTeamList" title="recommend"/>
-      </van-tab>
-    </van-tabs>
+        <team-cord-list :team-list="teamList" title="joinTeam"/>
   </van-pull-refresh>
 </template>
 <script setup>
@@ -16,10 +12,10 @@ import {useRouter} from "vue-router";
 import TeamCordList from "./TeamCordList.vue";
 import {ref,onMounted} from "vue";
 import myAxios from "../plugins/myAxios.js";
-let recommendTeamList = ref([])
+import getCurrentUser from "../config/getCurrentUser.ts";
+let teamList = ref([])
 const loading = ref(false);
 const isLoading = ref(true)
-const active = ref('0');
 //记录页面刷新次数，同时也记录 分页请求页
 const count = ref('0');
 const router = useRouter()
@@ -33,17 +29,18 @@ const onRefresh = () => {
     count.value++
   }, 1000);
 };
-
 onMounted(async ()=>{
-  const res = await myAxios.get("/team/recommend/page",{
-    params:{
-      pageSize: 10,
-      pageNum:1
+  const response = await getCurrentUser()
+  const res = await myAxios.get("/team/currentTeams",{
+   params:{
+     id:response?.id
+   }
+ })
+  if (res?.code===0 && res.date)
+    if (res.date.length===1){
+      teamList.value = [res]
     }
-  })
-  if (res?.code===0 && res.date){
-    recommendTeamList.value = res.date.records
-  }
+    teamList.value = res.date
 })
 
 </script>
