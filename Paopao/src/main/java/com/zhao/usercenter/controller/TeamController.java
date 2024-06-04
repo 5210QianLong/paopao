@@ -17,17 +17,19 @@ import com.zhao.usercenter.model.requset.TeamquitRequest;
 import com.zhao.usercenter.model.vo.TeamUserVO;
 import com.zhao.usercenter.service.TeamService;
 import com.zhao.usercenter.service.UserService;
+import io.swagger.annotations.ApiParam;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.util.CollectionUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-
-
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -50,6 +52,10 @@ public class TeamController {
     private TeamService teamService;
     @Resource
     private UserService userService;
+    @Qualifier("redisTemplate")
+    @Resource
+    private RedisTemplate<String,Object> redisTemplate;
+
     @PostMapping("/add")
     public BaseResponse<Long> addTeam(@RequestBody TeamAddRequest teamAddRequest, HttpServletRequest request) {
         //请求参数是否为空
@@ -63,11 +69,14 @@ public class TeamController {
         return ResultUtils.success(teamId);
     }
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteTeam(@RequestParam long id) {
-        if (id <= 0) {
+    public BaseResponse<Boolean> deleteTeam(@RequestBody Team team) {
+        if (team == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        boolean save = teamService.removeById(id);
+        if (team.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean save = teamService.removeById(team.getId());
         if (!save){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"插入失败");
         }
@@ -93,6 +102,19 @@ public class TeamController {
         }
         return ResultUtils.success(team);
     }
+    @GetMapping("/getTeam")
+    public BaseResponse<List<Team>> getTeamListsById(@RequestParam("id") long id) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        QueryWrapper<Team> queryWrapper = new QueryWrapper();
+        queryWrapper.eq("user_id", id);
+        List<Team> list = teamService.list(queryWrapper);
+        if (list == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        return ResultUtils.success(list);
+    }
     @GetMapping("/list")
     public BaseResponse<List<TeamUserVO>> getTeamLists(TeamQuery teamQuery, HttpServletRequest request) {
         if (teamQuery == null) {
@@ -104,6 +126,44 @@ public class TeamController {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         return ResultUtils.success(teamList);
+    }
+
+    /**
+     *针对当前用户已加入的队伍
+     * @param request
+     * @return
+     */
+    @GetMapping("/currentTeams")
+    public BaseResponse<List<Team>> getTeamLists(HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        List<Team> teamList = teamService.getTeamListByUser(loginUser);
+        if (teamList == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        return ResultUtils.success(teamList);
+    }
+    @GetMapping("/recommend/page")
+    public BaseResponse<Page<Team>> getRecommendTeamPage(long pageSize , long pageNum,HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        String redisTeamKey = String.format("Paopao:usercenter:team:reccommend:%s",loginUser.getId());
+        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+        //如果有缓存，直接走缓存
+        Page<Team> teamPage = (Page<Team>)valueOperations.get(redisTeamKey);
+        if (teamPage != null) {
+            return ResultUtils.success(teamPage);
+        }
+        //如果没有,走常规
+        QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        Page<Team> page = teamService.page(new Page<>(pageNum, pageSize), queryWrapper);
+        if (page==null){
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        try {
+            valueOperations.set(redisTeamKey, page,30000, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            log.error("redis set key error",e);
+        }
+        return ResultUtils.success(page);
     }
     @GetMapping("/list/page")
     public BaseResponse<Page<Team>> getTeamPage(TeamQuery teamQuery) {

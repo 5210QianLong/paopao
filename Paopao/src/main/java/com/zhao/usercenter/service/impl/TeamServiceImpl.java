@@ -167,6 +167,29 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         }
         return getUserList(teamList,userService);
     }
+
+    @Override
+    public List<Team> getTeamListByUser(User loginUser) {
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id",loginUser.getId());
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        if (CollectionUtils.isEmpty(userTeamList)){
+            throw new BusinessException(NULL_ERROR);
+        }
+        Long[] teamIds = new Long[userTeamList.size()];
+        for (int i = 0; i < userTeamList.size(); i++){
+                teamIds[i] = userTeamList.get(i).getTeamId();
+        }
+        //查询team
+        QueryWrapper<Team> qw = new QueryWrapper<>();
+        qw.in("id", teamIds);
+        List<Team> teamList = this.list(qw);
+        if (CollectionUtils.isEmpty(teamList)){
+            throw new BusinessException(NULL_ERROR);
+        }
+        return teamList;
+    }
+
     public static List<TeamUserVO> getUserList(List<Team> teamList,UserService userService) {
         //关联查询队伍创建人的信息
         List<TeamUserVO> teamUserVOList = new ArrayList<>();
