@@ -1,5 +1,4 @@
 package com.zhao.usercenter.service.impl;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.gson.Gson;
@@ -8,10 +7,13 @@ import com.zhao.usercenter.exception.BusinessException;
 import com.zhao.usercenter.mapper.UserMapper;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.service.UserService;
+import com.zhao.usercenter.utils.AlgorithmUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
@@ -19,6 +21,7 @@ import org.springframework.util.DigestUtils;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.zhao.usercenter.common.ErrorCode.*;
 import static com.zhao.usercenter.constant.UserConstant.ADMIN_ROLE;
@@ -245,4 +248,50 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         return userLogin != null && userLogin.getUserRole() == ADMIN_ROLE;
     }
 
+    @Override
+    public List<User> matchUsers(long num, User loginUser) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        //sql优化的点
+        queryWrapper.select("id","tags");
+        queryWrapper.isNotNull("tags");
+        //先得到所有用户
+        List<User> list = this.list(queryWrapper);
+        //拿loginUser的tags
+        String tags = loginUser.getTags();
+        Gson gson = new Gson();
+        List<String> loginuUserTags = gson.fromJson(tags, new TypeToken<List<String>>() {
+        }.getType());
+        //用sortedmap存取相似的用户所在列表的下表，value=distance
+        List<Pair<User,Long>> userDistanceList = new ArrayList<>();
+        //遍历list，拿到taglists与loginuUserTags一一比较
+        for (int i = 0; i < list.size(); i++) {
+            User user = list.get(i);
+            String userTags = user.getTags();
+            //没有标签和是自己本身的，跳过
+            if (StringUtils.isBlank(userTags) || Objects.equals(user.getId(), loginUser.getId())){
+                continue;
+            }
+            List<String> userTagsList = gson.fromJson(userTags, new TypeToken<List<String>>() {
+            }.getType());
+            long distance = AlgorithmUtils.minDistance(userTagsList, loginuUserTags);
+            userDistanceList.add(new ImmutablePair<>(user,distance));
+        }
+        //取出前top num 个数据
+        List<Pair<User,Long>> topUserList = userDistanceList.stream().
+                sorted((a, b) -> (int) (a.getValue() - b.getValue()))
+                .limit(num)
+                .toList();
+        List<Long> userVOList = topUserList.stream().map(pair -> pair.getKey().getId()).toList();
+        QueryWrapper<User> userQueryWrapper = new QueryWrapper<>();
+        //userVOList 出来的iD集合是正确的，但 下列查询出来的结果的顺序不一定是正确的
+        userQueryWrapper.in("id", userVOList);
+        Map<Long, List<User>> userIdUserListMap = this.list(userQueryWrapper)
+                .stream()
+                .map(this::getSafetyUser)
+                .collect(Collectors.groupingBy(User::getId));
+        List<User> finalUserList = new ArrayList<>();
+        //手动按顺序取user
+        userVOList.forEach(userVO -> finalUserList.add(userIdUserListMap.get(userVO).get(0)));
+        return finalUserList;
+    }
 }

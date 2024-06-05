@@ -2,6 +2,7 @@ package com.zhao.usercenter.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zhao.usercenter.model.domain.User;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
@@ -67,4 +68,12 @@ public interface UserService extends IService<User> {
      * @return 是否是管理员
      */
     boolean isAdmin(User userLogin);
+
+    /**
+     *  获取相似的用户列表
+     * @param num
+     * @param loginUser
+     * @return
+     */
+    List<User> matchUsers(long num, User loginUser);
 }

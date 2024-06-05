@@ -9,6 +9,7 @@ import com.zhao.usercenter.exception.BusinessException;
 import com.zhao.usercenter.model.domain.User;
 import com.zhao.usercenter.model.requset.userLoginRequset;
 import com.zhao.usercenter.model.requset.userRegisterRequset;
+import com.zhao.usercenter.model.vo.UserVO;
 import com.zhao.usercenter.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -200,4 +201,18 @@ public class UserController {
         return ResultUtils.success(b);
     }
 
+    /**
+     * 获取相似标签的用户列表
+     * @param num 要多少人
+     * @param request
+     * @return
+     */
+    @GetMapping("/match")
+    public BaseResponse<List<User>> getMatchUsers(long num, HttpServletRequest request){
+        if(num<=0 || num>=20){
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        return ResultUtils.success(userService.matchUsers(num,loginUser));
+    }
 }
