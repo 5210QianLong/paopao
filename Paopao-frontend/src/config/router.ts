@@ -13,17 +13,17 @@ import userCreateTeam from "../pages/userCreateTeam.vue";
 //  定义一些路由
 const routes = [
     { path: '/', component: index },
-    { path: '/team', component: team },
-    { path: '/team/teamEdit', component: createTeamPage },
+    { path: '/team',title:'找队伍', component: team },
+    { path: '/team/teamEdit',title:'新建队伍', component: createTeamPage },
     { path: '/team/teamPasswordEdit', component: passwordEditPage },
-    { path: '/user/update', component: userUpdate },
-    { path: '/user', component: user },
-    { path: '/user/join', component: userJoinTeam },
-    { path: '/user/create', component: userCreateTeam },
-    { path: '/search', component: Search },
-    { path: '/user/edit', component: editPage },
-    { path: '/search/searchResult', component: searchResultPage },
-    { path: '/login', component: userLogin },
+    { path: '/user/update',title:'更新信息', component: userUpdate },
+    { path: '/user',title:'我的信息', component: user },
+    { path: '/user/join',title:'已加入队伍', component: userJoinTeam },
+    { path: '/user/create',title:'已创建队伍', component: userCreateTeam },
+    { path: '/search',title:'搜索', component: Search },
+    { path: '/user/edit',title:'编辑', component: editPage },
+    { path: '/search/searchResult',title:'搜索结果', component: searchResultPage },
+    { path: '/login',title:'登 录', component: userLogin },
 
 ]
 export default routes

@@ -29,9 +29,10 @@
 import {ref} from 'vue'
 import myAxios from "../plugins/myAxios";
 import {showFailToast, showSuccessToast} from "vant";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 
-  const router = useRouter()
+const router = useRouter()
+  const route = useRoute()
   const userAccount = ref('');
   const userPassword = ref('');
   const onSubmit =async () => {
@@ -41,7 +42,8 @@ import {useRouter} from "vue-router";
   })
     if (res.code === 0 && res){
       showSuccessToast("登录成功")
-      router.replace("/")
+      //登录页重定向到 未登录时跳转之前的页面
+      window.location.href = route.query?.redirect ?? '/' ;
     }else {
       showFailToast("登录失败")
     }

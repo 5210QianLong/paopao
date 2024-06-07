@@ -4,12 +4,9 @@
       success-text="刷新成功"
       @refresh="onRefresh"
   >
-    <van-tabs  type="line" line-height="0px">
-      <van-tab title="我创建的队伍" >
-        <team-cord-list :team-list="recommendTeamList" title="createTeam" v-if="recommendTeamList.length!==0"/>
-      </van-tab >
-      <van-empty description="暂无队伍" v-if="recommendTeamList.length===0"/>
-    </van-tabs>
+
+    <team-cord-list :team-list="myTeam" title="createTeam" v-if="myTeam.length!==0"/>
+    <van-empty description="暂无队伍" v-if="myTeam.length===0"/>
 
   </van-pull-refresh>
   <div id="addTeamButton">
@@ -22,7 +19,7 @@ import TeamCordList from "./TeamCordList.vue";
 import {ref,onMounted} from "vue";
 import myAxios from "../plugins/myAxios.js";
 import getCurrentUser from "../config/getCurrentUser.ts";
-let recommendTeamList = ref([])
+let myTeam = ref([])
 const loading = ref(false);
 const isLoading = ref(true)
 //记录页面刷新次数，同时也记录 分页请求页
@@ -45,7 +42,7 @@ const onRefresh = () => {
 //     }
 //   })
 //   if (res?.code===0 && res.date){
-//       recommendTeamList.value = res.date.records
+//       myTeam.value = res.date.records
 //   }
 // }
 onMounted(async ()=>{
@@ -58,14 +55,14 @@ onMounted(async ()=>{
  })
   if (res?.code===0 && res.date)
     if (res.date.length===1){
-      recommendTeamList.value = [res]
+      myTeam.value = [res]
     }
-    recommendTeamList.value = res.date
+    myTeam.value = res.date
 })
 const router = useRouter()
   const addTeam = ()=>{
   router.push({
-    path:"/user"
+    path:"/team/teamEdit"
   })
   }
 </script>
@@ -73,5 +70,7 @@ const router = useRouter()
   #addTeamButton{
     width: 96%;
     margin-left: 2%;
+    position: fixed;
+    bottom: 14vw;
   }
 </style>
