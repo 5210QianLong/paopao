@@ -1,6 +1,7 @@
 package com.zhao.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zhao.usercenter.common.BaseResponse;
 import com.zhao.usercenter.common.ErrorCode;
@@ -24,16 +25,21 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static com.zhao.usercenter.common.ErrorCode.NULL_ERROR;
 import static com.zhao.usercenter.common.ErrorCode.PARAMS_ERROR;
 import static com.zhao.usercenter.constant.UserConstant.ADMIN_ROLE;
+import static com.zhao.usercenter.constant.UserConstant.PROJECT_NAME;
 
 /**
 * @author zql
@@ -48,9 +54,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
     private UserTeamService userTeamService;
     @Resource
     private  UserService userService;
-    @Autowired
+    @Resource
     private UserTeamMapper userTeamMapper;
-
+    @Resource
+    private RedissonClient redissonClient;
     @Override
     @Transactional(rollbackFor = Exception.class)
     public long addTeam(Team team, User loginUser) {
@@ -292,30 +299,49 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         if (expireTime != null && (expireTime.before(new Date()) || expireTime.equals(new Date()))){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        //校验队伍是否已满   (查队伍-用户关系表)
-        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("team_id", teamId);
-        long teamCount = userTeamService.count(queryWrapper);
-        if (teamCount <=0 || teamCount >=5){
-            throw new BusinessException(ErrorCode.NULL_ERROR,"队伍已满");
+
+        //上分布式锁
+        RLock rLock = redissonClient.getLock(PROJECT_NAME + ":doJoinTeam:lock");
+        try {
+            while(true){
+                if(rLock.tryLock(0,30000L, TimeUnit.MILLISECONDS)) {
+                    //校验队伍是否已满   (查队伍-用户关系表)
+                    QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+                    queryWrapper.eq("team_id", teamId);
+                    long teamCount = userTeamService.count(queryWrapper);
+                    if (teamCount <= 0 || teamCount >= 5) {
+                        throw new BusinessException(ErrorCode.NULL_ERROR, "队伍已满");
+                    }
+                    //到队伍-用户表里查 (查队伍-用户关系表)
+                    queryWrapper = new QueryWrapper<>();//复用，不用新起名字
+                    queryWrapper.eq("user_id", loginUser.getId());
+                    List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+                    if (userTeamList.size() >= 5) {
+                        throw new BusinessException(ErrorCode.NULL_ERROR, "加入队伍已达上限");
+                    }
+                    //不能加入重复的队伍
+                    userTeamList.forEach(userTeam -> {
+                        if (Objects.equals(userTeam.getTeamId(), teamId)) {
+                            throw new BusinessException(ErrorCode.NULL_ERROR, "不能加入重复的队伍");
+                        }
+                    });
+                    //新增队伍-用户关系表一条数据
+                    UserTeam newUserTeam = new UserTeam();
+                    newUserTeam.setTeamId(teamId);
+                    newUserTeam.setUserId(loginUser.getId());
+                    newUserTeam.setJoinTime(new Date());
+                    return userTeamService.save(newUserTeam);
+                }
+            }
+        } catch (InterruptedException e) {
+            log.error("redission set lock error", e);
+            return false;
+        }finally {
+            if (rLock.isHeldByCurrentThread()) {
+                //是当前线程获得锁，就解锁
+                rLock.unlock();
+            }
         }
-        //到队伍-用户表里查 (查队伍-用户关系表)
-        queryWrapper = new QueryWrapper<>();//复用，不用新起名字
-        queryWrapper.eq("user_id", loginUser.getId());
-        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
-        if (userTeamList.size() >= 5){
-            throw new BusinessException(ErrorCode.NULL_ERROR,"加入队伍已达上限");
-        }
-        //不能加入重复的队伍
-        userTeamList.forEach(userTeam -> {if (Objects.equals(userTeam.getTeamId(), teamId)){
-            throw new BusinessException(ErrorCode.NULL_ERROR,"不能加入重复的队伍");
-        }});
-        //新增队伍-用户关系表一条数据
-        UserTeam newUserTeam = new UserTeam();
-        newUserTeam.setTeamId(teamId);
-        newUserTeam.setUserId(loginUser.getId());
-        newUserTeam.setJoinTime(new Date());
-        return userTeamService.save(newUserTeam);
     }
 
     @Override
@@ -351,10 +377,11 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             queryWrapper.eq("team_id", teamId);
            return userTeamService.remove(queryWrapper);
         }
-        //是否是创建人
+        //是否是队长
         if(!Objects.equals(team.getLeaderId(), userId)){
             queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("user_id", userId);
+            queryWrapper.eq("team_id", teamId);
             log.info("非创建人退出队伍");
             return userTeamService.remove(queryWrapper);
         }else {

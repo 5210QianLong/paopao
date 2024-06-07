@@ -108,7 +108,7 @@ public class TeamController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         QueryWrapper<Team> queryWrapper = new QueryWrapper();
-        queryWrapper.eq("user_id", id);
+        queryWrapper.eq("leader_id", id);
         List<Team> list = teamService.list(queryWrapper);
         if (list == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
@@ -154,6 +154,7 @@ public class TeamController {
         }
         //如果没有,走常规
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>();
+        queryWrapper.ne("user_id", loginUser.getId());
         Page<Team> page = teamService.page(new Page<>(pageNum, pageSize), queryWrapper);
         if (page==null){
             throw new BusinessException(ErrorCode.NULL_ERROR);
